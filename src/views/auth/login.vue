@@ -2,6 +2,7 @@
 import v from '@/utils/validate'
 import { reactive } from 'vue'
 import { login } from '@/apis/user'
+import { store } from '@/utils'
 
 const { Field, Form, ErrorMessage } = v
 const from = reactive({
@@ -18,8 +19,9 @@ async function onSubmit(values: any) {
   const {
     data: { token },
   } = await login(values)
-  localStorage.setItem('token', token)
+  store.set('token', { token, expire: 10000 })
 }
+
 </script>
 
 <template>

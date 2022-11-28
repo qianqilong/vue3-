@@ -6,7 +6,7 @@ interface IData {
 export default {
   set(key: string, data: IData) {
     if (data.expire) {
-      data.expire = new Date().getDate() + data.expire * 1000
+      data.expire = new Date().getTime() + data.expire * 1000
     }
     localStorage.setItem(key, JSON.stringify(data))
   },

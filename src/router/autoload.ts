@@ -13,6 +13,9 @@ import { envs } from '@/utils'
  },*/
 const layouts = import.meta.glob('../layouts/*.vue')
 const views = import.meta.glob('../views/**/*.vue')
+const layoutseager = import.meta.glob('../layouts/*.vue', { eager: true })
+const viewseager = import.meta.glob('../views/**/*.vue', { eager: true })
+console.log(viewseager)
 /**
  * @returns 父级路由数组
  */
@@ -36,7 +39,9 @@ function getChildrenRoutes({ name }: RouteRecordRaw) {
   const routes = [] as Array<RouteRecordRaw>
   Object.entries(views).forEach(([file, module]) => {
     if (file.includes(`../views/${name as string}`)) {
-      const route = getRouteByModule(file, module)
+      // 子路由的其他配置
+      const authRoute = viewseager[file]
+      const route = Object.assign(getRouteByModule(file, module), authRoute)
       routes.push(route)
     }
   })
