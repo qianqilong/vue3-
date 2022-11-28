@@ -15,15 +15,17 @@ const layouts = import.meta.glob('../layouts/*.vue')
 const views = import.meta.glob('../views/**/*.vue')
 const layoutseager = import.meta.glob('../layouts/*.vue', { eager: true })
 const viewseager = import.meta.glob('../views/**/*.vue', { eager: true })
-console.log(viewseager)
 /**
  * @returns 父级路由数组
  */
 function getRoutes() {
   const routes = [] as Array<RouteRecordRaw>
   Object.entries(layouts).forEach(([file, module]) => {
-    const route = getRouteByModule(file, module)
+    // 子路由的其他配置
+    const authRoute = layoutseager[file] as any
+    const route = Object.assign(getRouteByModule(file, module), authRoute.default.router)
     route.children = getChildrenRoutes(route)
+    console.log(route)
     routes.push(route)
   })
   return routes
@@ -40,8 +42,8 @@ function getChildrenRoutes({ name }: RouteRecordRaw) {
   Object.entries(views).forEach(([file, module]) => {
     if (file.includes(`../views/${name as string}`)) {
       // 子路由的其他配置
-      const authRoute = viewseager[file]
-      const route = Object.assign(getRouteByModule(file, module), authRoute)
+      const authRoute = viewseager[file] as any
+      const route = Object.assign(getRouteByModule(file, module), authRoute.default.router)
       routes.push(route)
     }
   })

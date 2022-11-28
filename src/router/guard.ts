@@ -4,7 +4,7 @@ class Guard {
   constructor(private router: Router) {}
   public run() {
     this.router.beforeEach((to, from, next) => {
-      // console.log(to)
+      console.log(to)
       next()
     })
   }
