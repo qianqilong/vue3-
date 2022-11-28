@@ -25,7 +25,6 @@ function getRoutes() {
     const authRoute = layoutseager[file] as any
     const route = Object.assign(getRouteByModule(file, module), authRoute.default.router)
     route.children = getChildrenRoutes(route)
-    console.log(route)
     routes.push(route)
   })
   return routes

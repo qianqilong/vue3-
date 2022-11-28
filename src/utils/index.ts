@@ -1,4 +1,4 @@
 import { envs } from './env'
-import store from './store'
+import store, { IData } from './store'
 
-export { envs, store }
+export { envs, store,type IData }

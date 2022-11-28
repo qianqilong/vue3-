@@ -3,6 +3,7 @@ import v from '@/utils/validate'
 import { reactive } from 'vue'
 import { login } from '@/apis/user'
 import { store } from '@/utils'
+import router from '@/router'
 
 const { Field, Form, ErrorMessage } = v
 const from = reactive({
@@ -16,12 +17,14 @@ const rule = {
 }
 // 登录的方法
 async function onSubmit(values: any) {
-  const {
-    data: { token },
-  } = await login(values)
-  store.set('token', { token, expire: 10000 })
+  try {
+    const {
+      data: { token },
+    } = await login(values)
+    store.set('token', { token, expire: 10000 })
+    router.push('/')
+  } catch (error) {}
 }
-
 </script>
 
 <template>
@@ -76,3 +79,9 @@ async function onSubmit(values: any) {
   @apply rounded-md bg-pink-500 text-white text-xs px-2 mt-2 py-1 block;
 }
 </style>
+
+<script lang="ts">
+export default {
+  router: { meta: { guest: true } },
+}
+</script>

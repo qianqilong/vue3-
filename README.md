@@ -1098,3 +1098,125 @@ export default routes
 
 ```
 ## 路由守卫
+1. 修改添加路由的配置项
+```js
+import { RouteRecordRaw } from 'vue-router'
+import { envs } from '@/utils'
+
+const layouts = import.meta.glob('../layouts/*.vue')
+const views = import.meta.glob('../views/**/*.vue')
+const layoutseager = import.meta.glob('../layouts/*.vue', { eager: true })
+const viewseager = import.meta.glob('../views/**/*.vue', { eager: true })
+/**
+ * @returns 父级路由数组
+ */
+function getRoutes() {
+  const routes = [] as Array<RouteRecordRaw>
+  Object.entries(layouts).forEach(([file, module]) => {
+    // 子路由的其他配置
+    const authRoute = layoutseager[file] as any
+    // 添加了路由的其他配置
+    const route = Object.assign(getRouteByModule(file, module), authRoute.default.router)
+    route.children = getChildrenRoutes(route)
+    routes.push(route)
+  })
+  return routes
+}
+
+/**
+ *
+ * @param name 父级路由名
+ * @returns 子级路由数组
+ */
+function getChildrenRoutes({ name }: RouteRecordRaw) {
+  if (!name) return
+  const routes = [] as Array<RouteRecordRaw>
+  Object.entries(views).forEach(([file, module]) => {
+    if (file.includes(`../views/${name as string}`)) {
+      // 子路由的其他配置
+      const authRoute = viewseager[file] as any
+      // 添加了路由的其他配置
+      const route = Object.assign(getRouteByModule(file, module), authRoute.default.router)
+      routes.push(route)
+    }
+  })
+  return routes
+}
+/**
+ * 遍历获取路由
+ * @param file 文件路径
+ * @param module 路由懒加载函数
+ * @returns 路由项
+ */
+function getRouteByModule(file: string, module: Function) {
+  const name = file.replace(/\.\.\/[a-z]+\/|\.vue/gi, '')
+
+  // 对应的子路由
+  const route = {
+    path: `/${name}`,
+    name: name.replace('/', '.'),
+    component: module,
+  } as RouteRecordRaw
+
+  return route
+}
+
+const routes = envs.VITE_ROUTER_AUTOLOAD ? getRoutes() : ([] as Array<RouteRecordRaw>)
+export default routes
+```
+2. 向admin中组件中添加配置
+```html
+<script setup lang="ts"></script>
+
+<template>
+  <div>admin</div>
+  <RouterView></RouterView>
+</template>
+
+<style scoped></style>
+<!--  配置信息 -->
+<script lang="ts">
+export default {
+  router: { meta: { auth: true } },
+}
+</script>
+
+```
+3. 设置路由守卫
+```js
+import { RouteLocationNormalized, Router } from 'vue-router'
+import { store } from '@/utils'
+
+class Guard {
+  constructor(private router: Router) {}
+  public run() {
+    this.router.beforeEach((to, from, next) => {
+      const token = store.get('token')
+      // 合并匹配到的原信息
+      if (!this.isLogin(to, token)) {
+        next({
+          path: 'auth/login',
+        })
+      } else {
+        next()
+      }
+    })
+  }
+  private isLogin(route: RouteLocationNormalized, token: any) {
+    return Boolean(!route.meta?.auth || (route.meta.auth && token && token.token))
+  }
+}
+export default (router: Router) => {
+  new Guard(router).run()
+}
+
+```
+4. 在路由中引入
+```js
+export function setupRouter(app: App) {
+  guard(router)
+ ......
+}
+
+```
+  
