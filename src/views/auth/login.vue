@@ -5,7 +5,7 @@ import { login } from '@/apis/user'
 
 const { Field, Form, ErrorMessage } = v
 const from = reactive({
-  account: '195****@qq.com',
+  account: '195****950@qq.com',
   password: '123456',
 })
 // 验证的规则

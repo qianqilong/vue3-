@@ -1,5 +1,5 @@
 import { RouteRecordRaw } from 'vue-router'
-import { env } from '@/utils/helper'
+import { envs } from '@/utils'
 
 /* {
    path: '/admin',
@@ -61,5 +61,5 @@ function getRouteByModule(file: string, module: Function) {
   return route
 }
 
-const routes = env.VITE_ROUTER_AUTOLOAD ? getRoutes() : ([] as Array<RouteRecordRaw>)
+const routes = envs.VITE_ROUTER_AUTOLOAD ? getRoutes() : ([] as Array<RouteRecordRaw>)
 export default routes
