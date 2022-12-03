@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import v from '@/utils/validate'
 import { reactive } from 'vue'
-import { login } from '@/apis/user'
-import { store } from '@/utils'
-import router from '@/router'
+import { onSubmit, logout } from '@/utils'
 
 const { Field, Form, ErrorMessage } = v
 const from = reactive({
@@ -15,20 +13,13 @@ const rule = {
   account: { required: true, regex: /.+@.+\..{2}|\d{11}/ },
   password: { required: true, min: 3 },
 }
-// 登录的方法
-async function onSubmit(values: any) {
-  try {
-    const {
-      data: { token },
-    } = await login(values)
-    store.set('token', { token, expire: 10000 })
-    router.push('/')
-  } catch (error) {}
-}
 </script>
 
 <template>
-  <Form @submit="onSubmit" :validation-schema="rule" class="bg-slate-300 h-screen flex justify-center md:items-center">
+  <Form
+    @submit="(value:any)=>onSubmit(value)"
+    :validation-schema="rule"
+    class="bg-slate-300 h-screen flex justify-center md:items-center">
     <div class="w-[720px] bg-white md:grid grid-cols-2 rounded-md shadow-md overflow-hidden">
       <!-- 表单 -->
       <div class="p-6 flex flex-col justify-between">

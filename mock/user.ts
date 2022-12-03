@@ -3,7 +3,7 @@ import { MockMethod } from 'vite-plugin-mock'
 
 export default [
   {
-    url: '/api/info',
+    url: '/api/user/info',
     method: 'get',
     response: ({ query }) => {
       return {
@@ -11,8 +11,9 @@ export default [
         message: '获取数据成功',
         type: 'success',
         data: {
-          name: '刘小龙',
+          name: 'admin',
           age: 21,
+          avatar: '/image/avatar.jpg',
         },
       }
     },

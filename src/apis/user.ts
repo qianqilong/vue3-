@@ -3,11 +3,12 @@ import { ajax } from '@/plugins/axios'
 export interface User {
   name: string
   age: number
+  avatar: string
 }
 
 export function info() {
   return ajax.request<User>({
-    url: 'info',
+    url: 'user/info',
   })
 }
 

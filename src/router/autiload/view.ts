@@ -1,6 +1,6 @@
 import { RouteRecordRaw } from 'vue-router'
-import { envs } from '@/utils'
 
+// 更据文件夹布局进行注册
 /* {
    path: '/admin',
    component: () => import('@/views/home.vue'),
@@ -11,10 +11,10 @@ import { envs } from '@/utils'
    }
    ]
  },*/
-const layouts = import.meta.glob('../layouts/*.vue')
-const views = import.meta.glob('../views/**/*.vue')
-const layoutseager = import.meta.glob('../layouts/*.vue', { eager: true })
-const viewseager = import.meta.glob('../views/**/*.vue', { eager: true })
+const layouts = import.meta.glob('../../layouts/*.vue')
+const views = import.meta.glob('../../views/**/*.vue')
+const layoutseager = import.meta.glob('../../layouts/*.vue', { eager: true })
+const viewseager = import.meta.glob('../../views/**/*.vue', { eager: true })
 /**
  * @returns 父级路由数组
  */
@@ -55,8 +55,8 @@ function getChildrenRoutes({ name }: RouteRecordRaw) {
  * @returns 路由项
  */
 function getRouteByModule(file: string, module: Function) {
-  const name = file.replace(/\.\.\/[a-z]+\/|\.vue/gi, '')
-
+  const name = file.replace(/\.\.\/\.\.\/[a-z]+\/|\.vue/gi, '')
+  console.log(name)
   // 对应的子路由
   const route = {
     path: `/${name}`,
@@ -67,5 +67,4 @@ function getRouteByModule(file: string, module: Function) {
   return route
 }
 
-const routes = envs.VITE_ROUTER_AUTOLOAD ? getRoutes() : ([] as Array<RouteRecordRaw>)
-export default routes
+export default getRoutes

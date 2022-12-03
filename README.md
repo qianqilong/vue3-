@@ -1219,4 +1219,309 @@ export function setupRouter(app: App) {
 }
 
 ```
-  
+## 通过路由实现菜单的生成
+### (1)配置项路由
+1. 添加文件目录
+```js
+(1)router文件夹下module
+(2)通过module配置路由
+```
+2. 配置路由的相关信息
+```js
+import { RouteRecordRaw } from 'vue-router'
+
+export default {
+  name: 'error',
+  path: '/error',
+  meta: { title: '错误页面', icon: 'fas fa-virus', show: true, isClick: true },
+  component: () => import('@/layouts/error.vue'),
+  children: [
+    {
+      name: 'error.404',
+      meta: { title: '404页面', show: true, isClick: true },
+      path: '404',
+      component: () => import('@/views/error/404.vue'),
+    },
+    {
+      name: 'error.403',
+      meta: { title: '403页面', show: true },
+      path: '403',
+      component: () => import('@/views/error/403.vue'),
+    },
+    { name: 'error.500', path: '500', component: () => import('@/views/error/500.vue') },
+  ],
+} as RouteRecordRaw
+
+```
+3. 配置导入配置项的方法
+```js
+import { RouteRecordRaw } from 'vue-router'
+
+// 根据配置项自动注册
+export default function autoloadModuleRoutes() {
+  const modules = import.meta.glob('../module/**/*.ts', { eager: true })
+  const routes = [] as RouteRecordRaw[]
+  Object.keys(modules).forEach((key) => {
+    const module = modules[key] as any
+    routes.push(module.default)
+  })
+  return routes
+}
+
+```
+4. 添加配置导入和路由导入的方法
+```js
+import { envs } from '@/utils/env'
+import { RouteRecordRaw } from 'vue-router'
+import getRoutes from './view'
+import autoloadModuleRoutes from './module'
+/**
+ * 更具配置项进行判断
+ * 1. ture更具目录配置文件信息
+ * 2. false根据配置项配置文件信息
+ */
+
+let routes = [] as RouteRecordRaw[]
+if (envs.VITE_ROUTER_AUTOLOAD) {
+  routes = getRoutes()
+} else {
+  routes = autoloadModuleRoutes()
+}
+/**
+ * 权限过滤
+ */
+export default routes
+
+```
+### (2)配置项菜单
+1. 安装pinia
+2. 配置路由的元信息
+```js
+import { RouteRecordRaw } from 'vue-router'
+
+export default {
+  name: 'error',
+  path: '/error',
+  meta: { auth: true, menu: { title: '错误页面', icon: 'fas fa-virus', isClick: true } },
+  component: () => import('@/layouts/admin.vue'),
+  children: [
+    {
+      name: 'error.404',
+      meta: { menu: { title: '404页面', isClick: true, route: 'error.404' } },
+      path: '404',
+      component: () => import('@/views/error/404.vue'),
+    },
+    {
+      name: 'error.403',
+      meta: { menu: { title: '403页面', isClick: false, route: 'error.403' } },
+      path: '403',
+      component: () => import('@/views/error/403.vue'),
+    },
+    { name: 'error.500', path: '500', component: () => import('@/views/error/500.vue') },
+  ],
+} as RouteRecordRaw
+
+```
+3. 添加对应的路由元信息的支持
+```js
+import 'vue-router'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** 没有登录是否可见*/
+    auth?: boolean
+    /** 登录之后是否可见*/
+    guest?: boolean
+    /**权限 */
+    permissions?: string[]
+    // 路由对应的菜单信息
+    menu?: Menu
+  }
+}
+
+```
+4. pinia读取路由的元信息
+```js
+import { defineStore } from 'pinia'
+import { RouteLocationNormalized, useRouter } from 'vue-router'
+import store from '@/utils/sessionStorage'
+
+/** 管理路由显示的菜单页面 `*/
+export const menuStore = defineStore('menu', {
+  state: () => {
+    return {
+      menus: [] as IMenu[],
+      historyMenus: store.get('historyMenus') ? (store.get('historyMenus') as IMenu[]) : ([] as IMenu[]),
+    }
+  },
+  actions: {
+    /**初始化菜单信息 */
+    init() {
+      this.getMenuByRoute()
+    },
+    /**添加历史菜单 */
+    addHistoryMenu(route: RouteLocationNormalized) {
+      if (!route.meta.menu) return
+      const menu: IMenu = { ...(route.meta.menu as IMenu) }
+      if (!this.historyMenus.some((menu) => menu.route == route.name)) {
+        this.historyMenus.unshift(menu)
+        store.set('historyMenus', this.historyMenus)
+      }
+      this.historyMenus.length > 10 ? this.historyMenus.pop() : ''
+    },
+    /**删除历史菜单 */
+    removeHistoryMenu(menu: IMenu) {
+      const index = this.historyMenus.indexOf(menu)
+      this.historyMenus.splice(index, 1)
+      store.set('historyMenus', this.historyMenus)
+    },
+    /** 获取菜单信息*/
+    getMenuByRoute() {
+      const router = useRouter()
+      /**
+       * 子路由不为空
+       * 元信息显示
+       * 子路由元信息显示
+       */
+      const menus = router
+        .getRoutes()
+        .filter((route) => route.children.length !== 0 && route.meta.menu)
+        .map((route) => {
+          let imenu = { ...route.meta.menu } as IMenu
+          imenu.children = route.children
+            .filter((route) => route.meta?.menu)
+            .map((route) => {
+              return route.meta?.menu as Menu
+            })
+          return imenu
+        })
+      this.menus = menus
+    },
+  },
+})
+
+```
+5. 在admin.vue中完成路由的初始化
+```html
+<script setup lang="ts">
+import Menu from '@/components/admin/memu.vue'
+import Navbar from '@/components/admin/navbar.vue'
+import HistoryLink from '@/components/admin/historylink.vue'
+import { RouterView } from 'vue-router'
+import { menuStore } from '@/store/menuStore'
+import { watch, Transition } from 'vue'
+
+menuStore().init()
+</script>
+
+<template>
+  <div class="admin min-h-screen w-full flex">
+    <!-- 菜单 -->
+    <Menu class="hidden md:block" />
+    <div class="content flex-1 bg-gray-200">
+      <!-- 面包屑 -->
+      <Navbar />
+      <!-- 历史链接 -->
+      <HistoryLink />
+      <div class="m-3 rounded-md">
+        <RouterView #default="{ Component }">
+          <!-- 可以进行添加动画的 -->
+          <Transition>
+            <component :is="Component"></component>
+          </Transition>
+        </RouterView>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss"></style>
+<script lang="ts">
+export default {
+  router: { meta: { auth: true } },
+}
+</script>
+
+```
+## 面包屑以及历史菜单的生成
+
+# 后台页面的搭建
+## 1.配置echarts
+1. 添加CDN
+```js
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.0/echarts.common.min.js"></script>
+```
+1. 配置图表显示位置
+```html
+ <div>
+    <!-- 数据表 -->
+    <section class="grid grid-flow-col">
+      <div id="main" style="width: 600px; height: 400px"></div>
+    </section>
+  </div>
+```
+1. 生成数据表进行渲染
+```js
+<script>
+nextTick(() => {
+  // 基于准备好的dom，初始化echarts实例
+  var myChart = echarts.init(document.getElementById('main'))
+  // 绘制图表
+  myChart.setOption({
+    title: {
+      text: 'ECharts 入门示例',
+    },
+    tooltip: {},
+    xAxis: {
+      data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'],
+    },
+    yAxis: {},
+    series: [
+      {
+        name: '销量',
+        type: 'bar',
+        data: [5, 20, 36, 10, 10, 20],
+      },
+    ],
+  })
+})
+</script>
+```
+## 2.添加路由跳转的动画
+1. 普通动画
+```js
+   <div class="m-3 rounded-md relative min-h-screen  overflow-y-auto">
+        <RouterView #default="{ Component }">
+          <!-- 可以进行添加动画的 -->
+          <Transition
+            class="animate__animated"
+            leave-active-class="animate__fadeOutLeft"
+            enter-active-class="animate__fadeInRight">
+            <component :is="Component" class="absolute "></component>
+          </Transition>
+        </RouterView>
+      </div>
+```
+2. 通过路由配置添加动画           
+```js
+import 'vue-router'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** 没有登录是否可见*/
+    auth?: boolean
+    /** 登录之后是否可见*/
+    guest?: boolean
+    /**权限 */
+    permissions?: string[]
+    /**路由对应的菜单信息 */
+    menu?: Menu
+    /**动画 */
+    animation?: {
+      out: string
+      in: string
+    }
+  }
+}
+
+```
