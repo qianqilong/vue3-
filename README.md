@@ -1586,13 +1586,59 @@ export default {
 </script>
 
 ```
+## 路由的权限管理
+### (1)修改路由的自动引入
+1. 路由的引入
+```js
+import { envs } from '@/utils/env'
+import { Router } from 'vue-router'
+import getRoutes from './view'
+import autoloadModuleRoutes from './module'
+/**
+ * 更具配置项进行判断
+ * 1. ture更具目录配置文件信息
+ * 2. false根据配置项配置文件信息
+ */
+const routes = envs.VITE_ROUTER_AUTOLOAD ? getRoutes() : autoloadModuleRoutes()
+
+/**自动注册路由方法的修改 */
+function autoload(router: Router) {
+  routes.forEach((route) => {
+    router.addRoute(route)
+  })
+  }
+
+export default autoload
+```
+2. 路由的添加
+```js 
+import { App } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { routes } from './routes'
+import autoload from './autoload'
+import guard from './guard'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [...routes],
+})
+export function setupRouter(app: App) {
+  autoload(router)
+  guard(router)
+  app.use(router)
+}
+
+export default router
+```
+### (2)后端数据比对实现路由权限
+
 # 后台页面的搭建
 ## 1.配置echarts
 1. 添加CDN
 ```js
 <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.0/echarts.common.min.js"></script>
 ```
-2. 配置图表显示位置
+1. 配置图表显示位置
 ```html
  <div>
     <!-- 数据表 -->
@@ -1601,7 +1647,7 @@ export default {
     </section>
   </div>
 ```
-3. 生成数据表进行渲染
+1. 生成数据表进行渲染
 ```js
 <script>
 nextTick(() => {

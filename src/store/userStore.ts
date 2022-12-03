@@ -9,6 +9,7 @@ export const userStore = defineStore('user', {
     }
   },
   actions: {
+    /**获取用户信息 */
     async getUserinfo() {
       const res = await info()
       this.info = res.data
