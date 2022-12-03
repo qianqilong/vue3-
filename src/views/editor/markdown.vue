@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
-<template>markdown</template>
+<template><div>markdown</div></template>
 
 <style scoped lang="scss"></style>

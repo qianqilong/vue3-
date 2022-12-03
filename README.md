@@ -1444,20 +1444,8 @@ export default {
 
 ```
 ## 面包屑以及历史菜单的生成
-1. 使用pinia对历史菜单和面包屑的内容进行管理
-```js
-/*
- * @Author: 1959377950 1959377950@qq.com
- * @Date: 2022-11-30 12:53:32
- * @LastEditors: 1959377950 1959377950@qq.com
- * @LastEditTime: 2022-12-03 12:41:10
- * @FilePath: \Vue\src\store\menuStore.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
-import { defineStore } from 'pinia'
-import { RouteLocationNormalized, useRouter } from 'vue-router'
-import store from '@/utils/sessionStorage'
 
+<<<<<<< HEAD
 /** 管理路由显示的菜单页面 `*/
 export const menuStore = defineStore('menu', {
   state: () => {
@@ -1632,6 +1620,8 @@ export default router
 ```
 ### (2)后端数据比对实现路由权限
 
+=======
+>>>>>>> parent of e26c511 (修改自动注册路由的方法优化加载速度)
 # 后台页面的搭建
 ## 1.配置echarts
 1. 添加CDN
@@ -1689,7 +1679,7 @@ nextTick(() => {
         </RouterView>
       </div>
 ```
-1. 通过路由配置添加动画           
+2. 通过路由配置添加动画           
 ```js
 import 'vue-router'
 

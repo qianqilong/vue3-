@@ -4,7 +4,7 @@ export interface User {
   name: string
   age: number
   avatar: string
-  permissions: string
+  permissions: string[]
 }
 
 export function info() {
