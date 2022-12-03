@@ -1444,14 +1444,155 @@ export default {
 
 ```
 ## 面包屑以及历史菜单的生成
+1. 使用pinia对历史菜单和面包屑的内容进行管理
+```js
+/*
+ * @Author: 1959377950 1959377950@qq.com
+ * @Date: 2022-11-30 12:53:32
+ * @LastEditors: 1959377950 1959377950@qq.com
+ * @LastEditTime: 2022-12-03 12:41:10
+ * @FilePath: \Vue\src\store\menuStore.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+import { defineStore } from 'pinia'
+import { RouteLocationNormalized, useRouter } from 'vue-router'
+import store from '@/utils/sessionStorage'
 
+/** 管理路由显示的菜单页面 `*/
+export const menuStore = defineStore('menu', {
+  state: () => {
+    return {
+      /**菜单信息 */
+      menus: [] as IMenu[],
+      /**历史菜单信息 */
+      historyMenus: store.get('historyMenus') ? (store.get('historyMenus') as IMenu[]) : ([] as IMenu[]),
+      /**菜单的显示和隐藏 */
+      close: true,
+      route: null as null | RouteLocationNormalized,
+    }
+  },
+  actions: {
+    /**初始化菜单信息 */
+    init() {
+      this.getMenuByRoute()
+    },
+    /**添加历史菜单 */
+    addHistoryMenu(route: RouteLocationNormalized) {
+      if (!route.meta.menu) return
+      this.route = route
+      const menu: IMenu = { ...(route.meta.menu as IMenu) }
+      if (!this.historyMenus.some((menu) => menu.route == route.name)) {
+        this.historyMenus.unshift(menu)
+        store.set('historyMenus', this.historyMenus)
+      }
+      this.historyMenus.length > 10 ? this.historyMenus.pop() : ''
+    },
+    /**删除历史菜单 */
+    removeHistoryMenu(menu: IMenu) {
+      const index = this.historyMenus.indexOf(menu)
+      this.historyMenus.splice(index, 1)
+      store.set('historyMenus', this.historyMenus)
+    },
+    /** 获取菜单信息*/
+    getMenuByRoute() {
+      const router = useRouter()
+      /**
+       * 子路由不为空
+       * 元信息显示
+       * 子路由元信息显示
+       */
+      const menus = router
+        .getRoutes()
+        .filter((route) => route.children.length !== 0 && route.meta.menu)
+        .map((route) => {
+          let imenu = { ...route.meta.menu } as IMenu
+          imenu.children = route.children
+            .filter((route) => route.meta?.menu)
+            .map((route) => {
+              return route.meta?.menu as Menu
+            })
+          return imenu
+        })
+      this.menus = menus
+    },
+    /**切换菜单状态 */
+    checkoutClose(status: boolean) {
+      this.close = status
+    },
+  },
+})
+
+```
+2. 监视路由添加入pinia
+```js
+<script setup lang="ts">
+import Menu from '@/components/admin/memu.vue'
+import Navbar from '@/components/admin/navbar.vue'
+import HistoryLink from '@/components/admin/historylink.vue'
+import { RouterView, useRoute } from 'vue-router'
+import { menuStore } from '@/store/menuStore'
+import { Transition, watch } from 'vue'
+
+menuStore().init()
+
+const route = useRoute()
+watch(
+  route,
+  () => {
+    menuStore().addHistoryMenu(route)
+  },
+  { immediate: true },
+)
+</script>
+
+<template>
+  <div class="admin grid grid-cols-[auto_1fr] h-screen w-screen">
+    <!-- 菜单 -->
+    <Menu />
+    <div class="content bg-gray-200 gird grid-rows-[auto_1fr]">
+      <div>
+        <!-- 面包屑 -->
+        <Navbar />
+        <!-- 历史链接 -->
+        <HistoryLink />
+      </div>
+      <div class="md:m-3 rounded-md relative md:h-[80%] h-[91%] overflow-y-auto">
+        <RouterView #default="{ Component, route }">
+          <!-- 可以进行添加动画的 -->
+          <Transition
+            class="animate__animated"
+            :enter-active-class="route.meta.animation?.in ?? 'animate__fadeInRight'"
+            :leave-active-class="route.meta.animation?.out ?? 'animate__fadeOutLeft'">
+            <component :is="Component" class="absolute w-full"></component>
+          </Transition>
+        </RouterView>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.animate__fadeInRight {
+  animation-duration: 0.5s; /* don't forget to set a duration! */
+}
+.animate__fadeOutLeft {
+  animation-duration: 0.5s; /* don't forget to set a duration! */
+}
+</style>
+<script lang="ts">
+export default {
+  router: { meta: { auth: true } },
+}
+</script>
+
+```
 # 后台页面的搭建
 ## 1.配置echarts
 1. 添加CDN
 ```js
 <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.0/echarts.common.min.js"></script>
 ```
-1. 配置图表显示位置
+2. 配置图表显示位置
 ```html
  <div>
     <!-- 数据表 -->
@@ -1460,7 +1601,7 @@ export default {
     </section>
   </div>
 ```
-1. 生成数据表进行渲染
+3. 生成数据表进行渲染
 ```js
 <script>
 nextTick(() => {
@@ -1502,7 +1643,7 @@ nextTick(() => {
         </RouterView>
       </div>
 ```
-2. 通过路由配置添加动画           
+1. 通过路由配置添加动画           
 ```js
 import 'vue-router'
 

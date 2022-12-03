@@ -1,3 +1,11 @@
+/*
+ * @Author: 1959377950 1959377950@qq.com
+ * @Date: 2022-11-25 19:20:12
+ * @LastEditors: 1959377950 1959377950@qq.com
+ * @LastEditTime: 2022-12-03 13:51:29
+ * @FilePath: \Vue\mock\user.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { Random } from 'mockjs'
 import { MockMethod } from 'vite-plugin-mock'
 
@@ -14,6 +22,7 @@ export default [
           name: 'admin',
           age: 21,
           avatar: '/image/avatar.jpg',
+          permissions: ['editor_markdown', 'article_edit'],
         },
       }
     },

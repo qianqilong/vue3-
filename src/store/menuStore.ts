@@ -2,7 +2,7 @@
  * @Author: 1959377950 1959377950@qq.com
  * @Date: 2022-11-30 12:53:32
  * @LastEditors: 1959377950 1959377950@qq.com
- * @LastEditTime: 2022-12-03 12:41:10
+ * @LastEditTime: 2022-12-03 13:54:44
  * @FilePath: \Vue\src\store\menuStore.ts
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -19,7 +19,7 @@ export const menuStore = defineStore('menu', {
       /**历史菜单信息 */
       historyMenus: store.get('historyMenus') ? (store.get('historyMenus') as IMenu[]) : ([] as IMenu[]),
       /**菜单的显示和隐藏 */
-      close: true,
+      close: false,
       route: null as null | RouteLocationNormalized,
     }
   },

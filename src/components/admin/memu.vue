@@ -27,7 +27,7 @@ function handle(Menu?: IMenu, cMenu?: Menu) {
     Menu.isClick = true
   }
   if (cMenu) {
-    store.close = true
+    // store.close = true
     resetMenus(2)
     cMenu.isClick = true
     router.push({
@@ -38,7 +38,7 @@ function handle(Menu?: IMenu, cMenu?: Menu) {
 /**点击首页 */
 function handleHome() {
   router.push('/admin')
-  store.close = true
+  // store.close = true
 }
 </script>
 
