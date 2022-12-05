@@ -11,6 +11,10 @@ export const routes: Array<RouteRecordRaw> = [
     meta: { guest: true },
   },
   {
+    path: '/article',
+    component: () => import('@/views/article.vue'),
+  },
+  {
     path: '/:any(.*)',
     name: 'noFount',
     component: () => import('@/views/error/404.vue'),

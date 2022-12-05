@@ -33,6 +33,7 @@ watch(
         <RouterView #default="{ Component, route }">
           <!-- 可以进行添加动画的 -->
           <Transition
+            mode=""
             class="animate__animated"
             :enter-active-class="route.meta.animation?.in ?? 'animate__fadeInRight'"
             :leave-active-class="route.meta.animation?.out ?? 'animate__fadeOutLeft'">

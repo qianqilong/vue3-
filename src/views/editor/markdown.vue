@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Markdown from '@/components/editor/markdown/editor.vue'
+import Markdown from '@/components/editor/markdown/meditor.vue'
 import { ref } from 'vue'
 
 const content = ref('')
@@ -7,7 +7,7 @@ const content = ref('')
 
 <template>
   <div>
-    <Markdown v-model="content" :height="80" />
+    <meditor v-model="content" :height="80" />
     {{ content }}
   </div>
 </template>

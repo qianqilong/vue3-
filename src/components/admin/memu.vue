@@ -57,6 +57,7 @@ function handleHome() {
           <dt @click="handle(item)">
             <section class="flex items-center" @click="item.title == '首页' && handleHome()">
               <i class="mr-2 text-xl" :class="item.icon"></i>
+
               <span class="text-md">{{ item.title }}</span>
             </section>
             <section v-if="item.title !== '首页'">

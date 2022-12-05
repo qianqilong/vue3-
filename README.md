@@ -1700,6 +1700,44 @@ export default autoload
 
 ```
 ### (3)修复历史菜单的权限问题
+## 添加路由跳转的动画
+1. 普通动画
+```js
+   <div class="m-3 rounded-md relative min-h-screen  overflow-y-auto">
+        <RouterView #default="{ Component }">
+          <!-- 可以进行添加动画的 -->
+          <Transition
+            class="animate__animated"
+            leave-active-class="animate__fadeOutLeft"
+            enter-active-class="animate__fadeInRight">
+            <component :is="Component" class="absolute "></component>
+          </Transition>
+        </RouterView>
+      </div>
+```
+2. 通过路由配置添加动画           
+```js
+import 'vue-router'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** 没有登录是否可见*/
+    auth?: boolean
+    /** 登录之后是否可见*/
+    guest?: boolean
+    /**权限 */
+    permissions?: string[]
+    /**路由对应的菜单信息 */
+    menu?: Menu
+    /**动画 */
+    animation?: {
+      out: string
+      in: string
+    }
+  }
+}
+
+```
 # 后台页面的搭建
 ## 配置echart
 1. 添加CDN
@@ -1741,44 +1779,6 @@ nextTick(() => {
   })
 })
 </script>
-```
-## 添加路由跳转的动画
-1. 普通动画
-```js
-   <div class="m-3 rounded-md relative min-h-screen  overflow-y-auto">
-        <RouterView #default="{ Component }">
-          <!-- 可以进行添加动画的 -->
-          <Transition
-            class="animate__animated"
-            leave-active-class="animate__fadeOutLeft"
-            enter-active-class="animate__fadeInRight">
-            <component :is="Component" class="absolute "></component>
-          </Transition>
-        </RouterView>
-      </div>
-```
-1. 通过路由配置添加动画           
-```js
-import 'vue-router'
-
-declare module 'vue-router' {
-  interface RouteMeta {
-    /** 没有登录是否可见*/
-    auth?: boolean
-    /** 登录之后是否可见*/
-    guest?: boolean
-    /**权限 */
-    permissions?: string[]
-    /**路由对应的菜单信息 */
-    menu?: Menu
-    /**动画 */
-    animation?: {
-      out: string
-      in: string
-    }
-  }
-}
-
 ```
 ## 添加编辑器
 ### 1.markdown编辑器
@@ -2111,7 +2111,192 @@ export default class {
 }
 
 ```
-#### (3)
+## 添加列表动画组件
+### (1)动画现的原理
+1. 动画组件的实现
+```html
+<script setup lang="ts">
+import { articleAPI } from '@/apis/article'
+
+const { data } = await articleAPI()
+const articles = ref(data)
+function deleteFn(id: number) {
+  const index = articles.value.findIndex((item) => item.id === id)
+  articles.value.splice(index, 1)
+}
+</script>
+
+<template>
+  <div class="article">
+    <TransitionGroup tag="ul" name="animate">
+      <li v-for="(item, index) in articles" :key="item.id" @click="deleteFn(item.id)">
+        {{ item.title }}
+      </li>
+    </TransitionGroup>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.article {
+  position: relative;
+  padding: 30px;
+  ul {
+    li {
+      padding: 10px;
+      margin-bottom: 20px;
+      background-color: #8e44ad;
+      color: white;
+    }
+  }
+}
+.animate-leave-active {
+  transition: all 1s ease;
+  position: absolute;
+  width: 100%;
+}
+
+.animate-leave-to {
+  opacity: 0;
+}
+.animate-move {
+  transition: all 1s ease;
+}
+</style>
+
+```
+2. 初始加载的动画
+```html
+<script setup lang="ts">
+import { articleAPI } from '@/apis/article'
+import gsap from 'gsap'
+
+const articles = ref()
+articleAPI().then(({ data }) => {
+  articles.value = data
+})
+
+/**删除的方法 */
+function deleteFn(id: number) {
+  const index = articles.value.findIndex((item) => item.id === id)
+  articles.value.splice(index, 1)
+}
+/**进入动画之前 */
+function beforeEnter(el: any) {
+  gsap.set(el, {
+    opacity: 0,
+  })
+}
+/**进入动画 */
+function enter(el: any) {
+  gsap.to(el, {
+    opacity: 1,
+    duration: 1,
+    delay: el.dataset.index * 0.2,
+  })
+}
+</script>
+
+<template>
+  <div class="article">
+    <TransitionGroup tag="ul" name="animate" @enter="enter" @before-enter="beforeEnter">
+      <li :data-index="index" v-for="(item, index) in articles" :key="item.id" @click="deleteFn(item.id)">
+        {{ item.title }}
+      </li>
+    </TransitionGroup>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.article {
+  position: relative;
+  padding: 30px;
+  ul {
+    li {
+      padding: 10px;
+      margin-bottom: 20px;
+      background-color: #8e44ad;
+      color: white;
+    }
+  }
+}
+.animate-leave-active {
+  transition: all 1s ease;
+  position: absolute;
+  width: 100%;
+}
+
+.animate-leave-to {
+  opacity: 0 !important;
+}
+.animate-move {
+  transition: all 1s ease;
+}
+</style>
+
+```
+### (2)封装列表加载动画组件
+```js
+<script setup lang="ts">
+import gsap from 'gsap'
+
+interface Props {
+  /**上一级标签 */
+  tag?: string
+  /**加载时间 */
+  duration?: number
+  /**延迟时间 */
+  delay?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  tag: '',
+  duration: 1,
+  delay: 1,
+})
+const index = ref(props.delay)
+/**进入动画之前 */
+function beforeEnter(el: any) {
+  gsap.set(el, {
+    opacity: 0,
+  })
+}
+/**进入动画 */
+function enter(el: any) {
+  gsap.to(el, {
+    opacity: 1,
+    duration: props.duration,
+    delay: index.value++ * 0.2,
+  })
+}
+</script>
+
+<template>
+  <div class="animate-list">
+    <TransitionGroup appear :tag="tag" name="qlanimate" @enter="enter" @before-enter="beforeEnter">
+      <slot />
+    </TransitionGroup>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.animate-list {
+  position: relative;
+}
+:global(.qlanimate-leave-active) {
+  transition: all 1s ease;
+  position: absolute;
+  width: 100%;
+}
+
+:global(.qlanimate-leave-to) {
+  opacity: 0 !important;
+}
+:global(.qlanimate-move) {
+  transition: all 1s ease;
+}
+</style>
+
+```
 # 打包优化
 ## cdn引入问题
 1. echart修复报错

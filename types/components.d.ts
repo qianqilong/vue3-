@@ -7,23 +7,14 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    AdminHistorylink: typeof import('./../src/components/admin/historylink.vue')['default']
-    AdminMemu: typeof import('./../src/components/admin/memu.vue')['default']
-    AdminNavbar: typeof import('./../src/components/admin/navbar.vue')['default']
+    AnimateList: typeof import('./../src/components/global/other/animateList.vue')['default']
     Crumbs: typeof import('./../src/components/global/other/crumbs.vue')['default']
-    Editor: typeof import('./../src/components/editor/markdown/editor.vue')['default']
-    EditorMarkdownEditor: typeof import('./../src/components/editor/markdown/editor.vue')['default']
-    EditorWangEditorEditor: typeof import('./../src/components/editor/wangEditor/editor.vue')['default']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
     ElBreadcrumbItem: typeof import('element-plus/es')['ElBreadcrumbItem']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
-    GlobalFormQlButton: typeof import('./../src/components/global/form/ql-button.vue')['default']
-    GlobalFormQlInput: typeof import('./../src/components/global/form/ql-input.vue')['default']
-    GlobalFormQlLink: typeof import('./../src/components/global/form/ql-link.vue')['default']
-    GlobalOtherCrumbs: typeof import('./../src/components/global/other/crumbs.vue')['default']
-    GlobalOtherNotice: typeof import('./../src/components/global/other/notice.vue')['default']
     Historylink: typeof import('./../src/components/admin/historylink.vue')['default']
+    Meditor: typeof import('./../src/components/editor/markdown/meditor.vue')['default']
     Memu: typeof import('./../src/components/admin/memu.vue')['default']
     Navbar: typeof import('./../src/components/admin/navbar.vue')['default']
     Notice: typeof import('./../src/components/global/other/notice.vue')['default']
@@ -32,5 +23,6 @@ declare module '@vue/runtime-core' {
     QlLink: typeof import('./../src/components/global/form/ql-link.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    Weditor: typeof import('./../src/components/editor/wangEditor/weditor.vue')['default']
   }
 }

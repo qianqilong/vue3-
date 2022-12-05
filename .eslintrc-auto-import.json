@@ -1,7 +1,6 @@
 {
   "globals": {
     "EffectScope": true,
-    "ElMenu": true,
     "ElMessage": true,
     "computed": true,
     "createApp": true,

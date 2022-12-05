@@ -2,6 +2,7 @@
 import { echart1, echart2 } from '@/utils/echart'
 import { ElCard } from 'element-plus'
 import { reactive, nextTick } from 'vue'
+import * as echarts from 'echarts'
 
 interface ICard {
   title: string

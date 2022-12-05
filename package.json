@@ -9,12 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@icon-park/vue-next": "^1.4.2",
+    "@toast-ui/editor": "^3.2.1",
     "@types/echarts": "^4.9.16",
     "@types/node": "^18.11.9",
     "@vee-validate/i18n": "^4.7.3",
     "@vee-validate/rules": "^4.7.3",
+    "animate.css": "^4.1.1",
     "axios": "^1.2.0",
+    "echarts": "^5.4.0",
     "element-plus": "^2.2.25",
+    "gsap": "^3.11.3",
     "lodash": "^4.17.21",
     "mockjs": "^1.1.0",
     "pinia": "^2.0.27",
@@ -22,6 +27,7 @@
     "vee-validate": "^4.5.8",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6",
+    "wangeditor": "^4.7.15",
     "yup": "^0.32.11"
   },
   "devDependencies": {
