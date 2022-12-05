@@ -128,9 +128,9 @@ function handleHome() {
 
         &:hover {
           dd {
-            @apply absolute left-5 w-[150px] z-10;
+            @apply absolute  w-[150px] z-10;
             div {
-              display: block !important;
+              display: block !important ;
             }
           }
         }

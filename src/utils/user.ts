@@ -31,11 +31,17 @@ export async function onSubmit(values: IloginData) {
       data: { token },
     } = await login(values)
     store.set(CacheEnum.TOKEN_NAME, token)
-    const routeName = store.get(CacheEnum.REDIRECT_ROUTE_NAME) ?? ('home' as any)
+    const routeName = store.get(CacheEnum.REDIRECT_ROUTE_NAME) ?? ('admin.home' as any)
+    userStore().getUserinfo()
     ElMessage({
       message: '登陆成功',
       type: 'success',
     })
     router.push({ name: routeName })
   } catch (error) {}
+}
+
+/**判断是否登录 */
+export function isLogin() {
+  return Boolean(store.get(CacheEnum.TOKEN_NAME))
 }

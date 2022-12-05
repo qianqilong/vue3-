@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { RouteLocationNormalized, RouteRecordRaw, useRouter } from 'vue-router'
 import store from '@/utils/sessionStorage'
+import { CacheEnum } from '@/enum/cacheEnum'
 
 /** 管理路由显示的菜单页面 `*/
 export const menuStore = defineStore('menu', {
@@ -11,7 +12,8 @@ export const menuStore = defineStore('menu', {
       /**历史菜单信息 */
       historyMenus: getHistoryMenu(),
       /**菜单的显示和隐藏 */
-      close: false,
+      close: store.get(CacheEnum.MENU_IS_CLOSE) ?? false,
+      /**面包屑的路由信息 */
       route: null as null | RouteLocationNormalized,
     }
   },
@@ -62,6 +64,7 @@ export const menuStore = defineStore('menu', {
     /**切换菜单状态 */
     checkoutClose(status: boolean) {
       this.close = status
+      store.set(CacheEnum.MENU_IS_CLOSE, this.close)
     },
   },
 })

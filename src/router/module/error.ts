@@ -7,7 +7,7 @@ export default {
     auth: true,
     menu: {
       title: '错误页面',
-      icon: 'fas fa-virus',
+      icon: 'fas fa-bomb',
       isClick: true,
     },
   },

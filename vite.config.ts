@@ -30,5 +30,15 @@ export default ({ command, mode }: ConfigEnv) => {
         },
       },
     },
+    /**配置是使用mock还是 */
+    server: {
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+    },
   }
 }

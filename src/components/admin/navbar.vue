@@ -5,7 +5,7 @@ import { menuStore } from '@/store/menuStore'
 
 const store = menuStore()
 
-const { info } = userStore()
+const infostore = userStore()
 </script>
 
 <template>
@@ -24,8 +24,8 @@ const { info } = userStore()
     <div class="flex items-center relative cursor-pointer mr-3">
       <notice />
       <div class="group flex justify-center items-center relative cursor-pointer mr-3">
-        <img :src="info?.avatar" class="w-8 h-8 rounded-full object-cover" />
-        <span class="ml-1 text-xs text-gray-600">{{ info?.name }}</span>
+        <img :src="infostore.info?.avatar" class="w-8 h-8 rounded-full object-cover" />
+        <span class="ml-1 text-xs text-gray-600">{{ infostore.info?.name }}</span>
         <section
           class="group-hover:block absolute top-full items-center z-10 bg-white shadow-sm px-3 whitespace-nowrap border rounded-md hidden">
           <div class="ql-menu">

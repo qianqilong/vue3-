@@ -7,13 +7,10 @@ export const routes: Array<RouteRecordRaw> = [
   },
   {
     path: '/auth/login',
-    component: () => import('@/views/auth/login.vue'),
+    component: () => import('@/views/auth/loginAPI.vue'),
     meta: { guest: true },
   },
-  {
-    path: '/article',
-    component: () => import('@/views/article.vue'),
-  },
+
   {
     path: '/:any(.*)',
     name: 'noFount',
