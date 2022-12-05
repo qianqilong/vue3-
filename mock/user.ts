@@ -14,7 +14,8 @@ export default [
           name: 'admin',
           age: 21,
           avatar: '/image/avatar.jpg',
-          permissions: ['editor_markdown', 'editor_edit'],
+          /**权限 */
+          permissions: ['editor_msarkdown', 'editor_edsit'],
         },
       }
     },
@@ -30,6 +31,20 @@ export default [
         type: 'success',
         data: {
           token: Random.string(80),
+        },
+      }
+    },
+  },
+  {
+    url: '/api/upload/image',
+    method: 'get',
+    response: ({ query }) => {
+      return {
+        code: 200,
+        message: '上传数据成功',
+        type: 'success',
+        data: {
+          url: '/image/avatar.jpg',
         },
       }
     },

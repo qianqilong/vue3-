@@ -2,7 +2,6 @@ import { RouteLocationNormalized, Router } from 'vue-router'
 import { store } from '@/utils'
 import { userStore } from '@/store/userStore'
 import { CacheEnum } from '@/enum/cacheEnum'
-import { menuStore } from '@/store/menuStore'
 
 class Guard {
   constructor(private router: Router) {}
@@ -23,13 +22,14 @@ class Guard {
     if (!this.isGuest(to, token)) {
       return from
     }
+    await this.getUserInfo()
   }
-  // // 获取用户信息
-  // private getUserInfo() {
-  //   const token = this.getToken()
+  // 获取用户信息
+  private getUserInfo() {
+    const token = this.getToken()
 
-  //   if (token) return userStore().getUserinfo()
-  // }
+    if (token) return userStore().getUserinfo()
+  }
   private getToken() {
     return store.get(CacheEnum.TOKEN_NAME)
   }

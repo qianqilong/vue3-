@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import v from '@/utils/validate'
-import { reactive } from 'vue'
-import { onSubmit, logout } from '@/utils'
+import { onSubmit } from '@/utils'
 
 const { Field, Form, ErrorMessage } = v
 const from = reactive({
@@ -43,7 +42,8 @@ const rule = {
               label="密码" />
             <ErrorMessage name="password" class="error" />
           </div>
-          <qlButton class="mt-5" />
+          <!-- <qlButton class="mt-5" /> -->
+          <QlButton class="mt-5" />
           <div class="flex justify-center mt-4">
             <i class="fab fa-weixin bg-green-600 text-white rounded-full p-1 cursor-pointer"></i>
           </div>

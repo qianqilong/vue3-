@@ -1,13 +1,5 @@
-/*
- * @Author: 1959377950 1959377950@qq.com
- * @Date: 2022-11-30 12:53:32
- * @LastEditors: 1959377950 1959377950@qq.com
- * @LastEditTime: 2022-12-03 15:45:04
- * @FilePath: \Vue\src\store\menuStore.ts
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 import { defineStore } from 'pinia'
-import { RouteLocationNormalized, useRouter } from 'vue-router'
+import { RouteLocationNormalized, RouteRecordRaw, useRouter } from 'vue-router'
 import store from '@/utils/sessionStorage'
 
 /** 管理路由显示的菜单页面 `*/
@@ -17,7 +9,7 @@ export const menuStore = defineStore('menu', {
       /**菜单信息 */
       menus: [] as IMenu[],
       /**历史菜单信息 */
-      historyMenus: store.get('historyMenus') ? (store.get('historyMenus') as IMenu[]) : ([] as IMenu[]),
+      historyMenus: getHistoryMenu(),
       /**菜单的显示和隐藏 */
       close: false,
       route: null as null | RouteLocationNormalized,
@@ -33,15 +25,15 @@ export const menuStore = defineStore('menu', {
       if (!route.meta.menu) return
       this.route = route
       const menu: IMenu = { ...(route.meta.menu as IMenu) }
-      if (!this.historyMenus.some((menu) => menu.route == route.name)) {
+      if (!this.historyMenus.some((menu) => menu?.route == route.name)) {
         this.historyMenus.unshift(menu)
         store.set('historyMenus', this.historyMenus)
       }
       this.historyMenus.length > 10 ? this.historyMenus.pop() : ''
     },
     /**删除历史菜单 */
-    removeHistoryMenu(menu: IMenu) {
-      const index = this.historyMenus.indexOf(menu)
+    removeHistoryMenu(menu?: IMenu) {
+      const index = this.historyMenus.indexOf(menu!)
       this.historyMenus.splice(index, 1)
       store.set('historyMenus', this.historyMenus)
     },
@@ -73,3 +65,19 @@ export const menuStore = defineStore('menu', {
     },
   },
 })
+/**获取历史菜单 */
+function getHistoryMenu() {
+  // 获取所有子路由
+  const routes = [] as RouteRecordRaw[]
+  useRouter()
+    .getRoutes()
+    .map((item) => (item.path === '/admin' ? routes.push(item) : routes.push(...item.children)))
+
+  const historyMenus = store.get('historyMenus') ? (store.get('historyMenus') as IMenu[]) : ([] as IMenu[])
+
+  return (
+    (routes
+      .filter((route) => historyMenus.some((item) => item.route === route.name || route.name === 'admin'))
+      .map((item) => item.meta?.menu) as IMenu[]) ?? ([] as IMenu[])
+  )
+}

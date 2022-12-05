@@ -223,7 +223,7 @@ export function setupPlugin(isBuild: boolean, env: viteEnv) {
 }
 
 ```
-4. 创建mock文件夹
+4. 创建mock文件夹添加ts支持
 ```js
 // 添加ts支持tsconfig.node.json
 {
@@ -1444,8 +1444,8 @@ export default {
 
 ```
 ## 面包屑以及历史菜单的生成
-
-<<<<<<< HEAD
+1. 生成菜单和面包屑的信息
+```
 /** 管理路由显示的菜单页面 `*/
 export const menuStore = defineStore('menu', {
   state: () => {
@@ -1572,7 +1572,6 @@ export default {
   router: { meta: { auth: true } },
 }
 </script>
-
 ```
 ## 路由的权限管理
 ### (1)修改路由的自动引入
@@ -1619,16 +1618,95 @@ export function setupRouter(app: App) {
 export default router
 ```
 ### (2)后端数据比对实现路由权限
+1. mockjs返回数据
+```js
+  {
+    url: '/api/user/info',
+    method: 'get',
+    response: ({ query }) => {
+      return {
+        code: 200,
+        message: '获取数据成功',
+        type: 'success',
+        data: {
+          name: 'admin',
+          age: 21,
+          avatar: '/image/avatar.jpg',
+          /**权限 */
+          permissions: ['editor_markdown', 'editor_edit'],
+        },
+      }
+    },
+  },
+```
+2. 路由元信息中配置权限
+```js
 
-=======
->>>>>>> parent of e26c511 (修改自动注册路由的方法优化加载速度)
+import { RouteRecordRaw } from 'vue-router'
+
+export default {
+  name: 'editor',
+  path: '/editor',
+  meta: {
+    auth: true,
+    menu: { title: '编辑器', icon: 'fab fa-adversal', isClick: false },
+  },
+  component: () => import('@/layouts/admin.vue'),
+  children: [
+    {
+      name: 'editor.base',
+      meta: { menu: { title: '富文本', isClick: false, route: 'editor.base' },permission:'editor_edit'},
+      path: 'base',
+      component: () => import('@/views/editor/base.vue'),
+    },
+    {
+      name: 'editor.markdown',
+      path: 'markdown',
+      meta: { menu: { title: 'markdown', isClick: false, route: 'editor.markdown' }, permission: 'editor_markdown' },
+      component: () => import('@/views/editor/markdown.vue'),
+    },
+  ],
+} as RouteRecordRaw
+
+```
+3. 加载路由时过滤权限
+```js
+import { envs } from '@/utils/env'
+import { Router, RouteRecordRaw } from 'vue-router'
+import getRoutes from './view'
+import autoloadModuleRoutes from './module'
+import { userStore } from '@/store/userStore'
+/**
+ * 更具配置项进行判断
+ * 1. ture更具目录配置文件信息
+ * 2. false根据配置项配置文件信息
+ */
+let routes = envs.VITE_ROUTER_AUTOLOAD ? getRoutes() : autoloadModuleRoutes()
+/**
+ * 权限过滤和加载路由
+ */
+function autoload(router: Router) {
+  const user = userStore()
+  routes.forEach((route) => {
+    route.children = route.children?.filter((item) => {
+      const permissions = item.meta?.permission
+      return permissions ? user.info?.permissions.includes(permissions) : true
+    })
+    router.addRoute(route)
+  })
+}
+
+export default autoload
+
+```
+### (3)修复历史菜单的权限问题
 # 后台页面的搭建
-## 1.配置echarts
+## 配置echart
 1. 添加CDN
 ```js
 <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.0/echarts.common.min.js"></script>
 ```
-1. 配置图表显示位置
+2. 配置图表显示位置
 ```html
  <div>
     <!-- 数据表 -->
@@ -1637,7 +1715,7 @@ export default router
     </section>
   </div>
 ```
-1. 生成数据表进行渲染
+3. 生成数据表进行渲染
 ```js
 <script>
 nextTick(() => {
@@ -1664,7 +1742,7 @@ nextTick(() => {
 })
 </script>
 ```
-## 2.添加路由跳转的动画
+## 添加路由跳转的动画
 1. 普通动画
 ```js
    <div class="m-3 rounded-md relative min-h-screen  overflow-y-auto">
@@ -1679,7 +1757,7 @@ nextTick(() => {
         </RouterView>
       </div>
 ```
-2. 通过路由配置添加动画           
+1. 通过路由配置添加动画           
 ```js
 import 'vue-router'
 
@@ -1702,3 +1780,542 @@ declare module 'vue-router' {
 }
 
 ```
+## 添加编辑器
+### 1.markdown编辑器
+#### (1)基本搭建
+1. CDN引入
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  ....
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+  <!-- 防止样式冲突 -->
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+</body>
+
+</html>
+```
+2. 定义类型提示
+```js
+declare namespace toastui {
+  class Editor {
+    constructor(option: any)
+    /**获取markdonw中的内容 */
+    getMarkdown: () => string
+    /**markdown中内容变成html */
+    getHTML: () => string
+    /**触发改变输入框内容的回调 */
+    on: (e: string, callback: Function) => void
+  }
+}
+```
+3. 定义编辑器的方法
+```js
+export default class {
+  editor
+  
+  constructor(el: string, initialValue: string, height: string) {
+    this.editor = new toastui.Editor({
+      el: document.querySelector(el),
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
+      height,
+      initialValue,
+    })
+    this.ImageHook()
+  }
+```
+4. 使用编辑器
+```js
+<script setup lang="ts">
+import { nextTick } from 'vue'
+import ToastEdit from './toastEdit'
+
+interface Props {
+  /**定义了高度 */
+  height?: number
+  /**定义内容 */
+  modelValue?: string
+}
+interface Emits {
+  /**更新父组件中的内容  */
+  (e: 'update:modelValue', value: string): void
+}
+const props = withDefaults(defineProps<Props>(), {
+  height: 500,
+  modelValue: '',
+})
+const emit = defineEmits<Emits>()
+
+nextTick(() => {
+  const toastUi = new ToastEdit('#editor', props.modelValue, `${props.height}px`)
+  toastUi.editor.on('change', (type: string) => {
+    emit('update:modelValue', toastUi.editor[type === 'markdown' ? 'getMarkdown' : 'getHTML']())
+  })
+})
+</script>
+
+<template>
+  <div id="editor"></div>
+</template>
+
+<style scoped lang="scss">
+// @import 'https://uicdn.toast.com/editor/latest/toastui-editor.min.css';
+#editor {
+  background-color: white;
+}
+.toastui-editor-mode-switch {
+  display: none !important;
+}
+</style>
+```
+#### (2)自定义markdown上传图片
+1. 定义类型支持
+```js
+declare namespace toastui {
+  class Editor {
+    constructor(option: any)
+    /**获取markdonw中的内容 */
+    getMarkdown: () => string
+    /**markdown中内容变成html */
+    getHTML: () => string
+    /**触发改变输入框内容的回调 */
+    on: (e: string, callback: Function) => void
+    /**移除钩子的方法 */
+    removeHook: (handle: string) => void
+    /**添加hook的方法 */
+    addHook: (handle: string, callback: Function) => void
+  }
+}
+
+```
+2. 修改上传的逻辑
+```js
+import { uploadImage } from '@/apis/upload'
+
+export default class {
+  editor
+  constructor(el: string, initialValue: string, height: string) {
+    this.editor = new toastui.Editor({
+      el: document.querySelector(el),
+      initialEditType: 'markdown',
+      previewStyle: 'vertical',
+      height,
+      initialValue,
+    })
+    this.ImageHook()
+  }
+  /**上传 */
+  private ImageHook() {
+    this.editor.removeHook('addImageBlobHook')
+    this.editor.addHook('addImageBlobHook', async (blob: any, callback: Function) => {
+      const form = new FormData()
+      form.append('file', blob, blob.name)
+      const response = await uploadImage(form)
+      callback(response.data.url, blob.name)
+    })
+  }
+}
+```
+#### (3)自定义markdown按键
+1. 添加工具条方法
+```js
+import { uploadImage } from '@/apis/upload'
+
+export default class {
+  editor
+  ui
+  constructor(el: string, initialValue: string, height: string) {
+    this.editor = new toastui.Editor({
+    ......
+    //  工具的方法
+      toolbarItems: this.toolbar(),
+    })
+    this.ImageHook()
+    this.ui = document.querySelector('.toastui-editor-defaultUI') as HTMLDivElement
+  }
+  /**自定义工具条 */
+  private toolbar() {
+    return [
+      // 自己本来的工具
+      ['heading', 'bold', 'italic'],
+      ['hr', 'quote'],
+      ['ul', 'ol', 'task', 'indent', 'outdent'],
+      ['table', 'image', 'link'],
+      ['code', 'codeblock'],
+    ]
+  }
+ ......
+}
+
+```
+2. 添加按键
+```js
+import { uploadImage } from '@/apis/upload'
+
+export default class {
+  editor
+  ui
+  constructor(el: string, initialValue: string, height: string) {
+    this.editor = new toastui.Editor({
+    ...
+      toolbarItems: this.toolbar(),
+    })
+    this.ImageHook()
+    this.ui = document.querySelector('.toastui-editor-defaultUI') as HTMLDivElement
+  }
+  /**自定义工具条 */
+  private toolbar() {
+    return [
+      ['heading', 'bold', 'italic'],
+      ['hr', 'quote'],
+      ['ul', 'ol', 'task', 'indent', 'outdent'],
+      ['table', 'image', 'link'],
+      ['code', 'codeblock'],
+      // 自定义的按键
+      [
+        {
+          el: this.fullscreen(),
+          command: 'fullscreen',
+          tooltip: 'fullscreen',
+        },
+      ],
+    ]
+  }
+  /**全屏的功能 */
+  private fullscreen() {
+    const button = document.createElement('button')
+    button.innerHTML = '全屏'
+    button.style.margin = '0'
+    button.addEventListener('click', () => {
+      this.ui.classList.toggle('fullscreen')
+      this.editor.focus()
+    })
+    document.documentElement.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        this.ui.classList.toggle('fullscreen')
+        this.editor.focus()
+      }
+    })
+    return button
+  }
+  
+}
+
+```
+### 2.富文本编辑器
+#### (1)基本代建
+1. CDN引入
+```js
+script src="https://cdn.jsdelivr.net/npm/wangeditor@latest/dist/wangEditor.min.js"></script>
+```
+2. 定义类型
+```js
+declare class wangEditor {
+  constructor(el: string)
+  /**开始创建 */
+  create: () => void
+  config: { [key: string]: any }
+  txt: { [key: string]: any }
+}
+
+```
+3. 定义编辑器的方法
+```js
+export default class {
+  editor: wangEditor
+  constructor(el: string, config: { [key: string]: any }, callback: Function) {
+    this.editor = new wangEditor(el)
+    /**设置高度 */
+    this.editor.config.height = config.height
+    this.editor.create()
+    /**设置内容 */
+    this.editor.txt.html(config.modelValue)
+    /**改变的回调 */
+    this.editor.config.onchange = callback
+  }
+}
+```
+4. 使用编辑器
+```js
+<script setup lang="ts">
+import { nextTick } from 'vue'
+import wangEditor from './wangEditor'
+
+interface Props {
+  /**高度 */
+  height?: number
+  /**初始值 */
+  modelValue?: string
+  /**上传图片地址 */
+  uploadAddr?: string
+}
+const emit = defineEmits<Emits>()
+nextTick(() => {
+  new wangEditor('#wang', props, (newValue: string) => {
+    emit('update:modelValue', newValue)
+  })
+})
+</script>
+
+<template>
+  <div id="wang"></div>
+</template>
+
+<style scoped lang="scss">
+
+</style>
+
+```
+#### (2)添加自定义图片的上传
+1. 自定义上传图片
+```js
+export default class {
+  editor: wangEditor
+  constructor(el: string, config: { [key: string]: any }, callback: Function) {
+    this.editor = new wangEditor(el)
+    /**设置高度 */
+    this.editor.config.height = config.height
+    /**自定义上传图片的钩子 */
+    this.editor.config.uploadImgHooks = this.uploadImage()
+    /**上传图片的地址 */
+    this.editor.config.uploadImgServer = config.uploadAddr
+    this.editor.create()
+    /**设置内容 */
+    this.editor.txt.html(config.modelValue)
+    /**改变的回调 */
+    this.editor.config.onchange = callback
+  }
+  /**
+   * @returns Function(insertImgFn, result)
+   * @params insertImgFn 图片插入操作
+   * @params result 即服务端返回的接口
+   */
+  uploadImage() {
+    return {
+      customInsert: function (insertImgFn: (data: string) => void, result: any) {
+        insertImgFn(result.data.url)
+      },
+    }
+  }
+}
+
+```
+#### (3)
+# 打包优化
+## cdn引入问题
+1. echart修复报错
+```js
+declare namespace echarts {
+  function init(_data: any): { setOption: (data: any) => {} }
+}
+```
+1. markdown修改报错
+```js
+declare namespace toastui {
+  class Editor {
+    constructor(option: any)
+    /**获取markdonw中的内容 */
+    getMarkdown: () => string
+    /**markdown中内容变成html */
+    getHTML: () => string
+    /**触发改变输入框内容的回调 */
+    on: (e: string, callback: Function) => void
+    /**移除钩子的方法 */
+    removeHook: (handle: string) => void
+    /**添加hook的方法 */
+    addHook: (handle: string, callback: Function) => void
+    /**设置高度的方法 */
+    setHeight: (height: string) => void
+    /**文本框聚焦 */
+    focus: () => void
+  }
+}
+
+```
+3. 引入第三方声明文件
+```js
+{
+  "compilerOptions": {
+   ......
+    "types": ["vite/client", "echarts","element-plus/global"]
+  },
+
+ ......
+}
+
+```
+## 打包体积插件
+1. yarn add --dev rollup-plugin-visualizer
+2. vite配置
+```js
+......
+import { visualizer } from 'rollup-plugin-visualizer'
+/**
+ * @command 配置文件
+ * @mode 模式
+ */
+export default ({ command, mode }: ConfigEnv) => {
+ ......
+  return {
+    plugins: [...setupPlugin(isBuild, env), visualizer()],
+    resolve: {
+      alias,
+    },
+  }
+}
+```
+## 按需引入element plug
+1. npm install -D unplugin-vue-components unplugin-auto-import
+2. 引入按需引入插件
+```js
+import { Plugin } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+
+export function setupELementPlugin(plugins: Plugin[]) {
+  plugins.push(
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
+    }),
+  )
+}
+
+```
+3. 取消全局引入
+```js
+import { App } from 'vue'
+
+import 'element-plus/dist/index.css'
+
+export default function setupElementPlus(app: App) {
+  // app.use(ElementPlus)
+}
+```
+4. 分块打包
+```js
+// vite.config.js配置
+export default defineConfig({
+  plugins: [vue()],
+  build: {
+    rollupOptions: {
+    	emptyOutDir: true,
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return id.toString().split('node_modules/')[1].split('/')[0].toString()
+          }
+        },
+      },
+    },
+  },
+})
+```
+# 按需引入的配置
+## 组件的按需引入
+1. 所需插件
+```js
+yarn add -D unplugin-vue-components
+```
+2. 自动注册的配置
+```js
+import { Plugin } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+
+export function setupAutoImportPlugin(plugins: Plugin[]) {
+  plugins.push(
+    /**按需加载 */
+    Components({
+      /**elemenmt plug的配置 */
+      resolvers: [ElementPlusResolver()],
+      /** 自动加载的组件目录，默认值为 ['src/components']*/
+      dirs: ['src/components'],
+      /**组件名称包含目录，防止同名组件冲突*/
+       directoryAsNamespace: true,
+      /**指定类型声明文件，为true时在项目根目录创建*/
+      dts: 'types/components.d.ts',
+    }),
+  )
+}
+
+```
+3. 生成的类型要在tsconfig.node.json中引入
+```js
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts", "vite/**/*.ts", "mock/**/*.ts", "types/**/*.d.ts"]
+}
+
+```
+## api的按需引入
+1. 所需插件
+```js
+yarn add -D unplugin-auto-import
+```
+2. 自动注册的配置
+```js
+import { Plugin } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+
+export function setupAutoImportPlugin(plugins: Plugin[]) {
+  /**按需加载api */
+  plugins.push(
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+      imports: ['vue', 'vue-router'],
+      dts: 'types/auto-imports.d.ts',
+    }))
+   
+}
+
+```
+3. 解决eslint报错
+```js
+import { Plugin } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+
+export function setupAutoImportPlugin(plugins: Plugin[]) {
+  plugins.push(
+    AutoImport({
+      resolvers: [ElementPlusResolver()],
+      imports: ['vue', 'vue-router'],
+      dts: 'types/auto-imports.d.ts',
+   // eslint报错解决
+      eslintrc: {
+        enabled: true, // Default `false`
+        filepath: './.eslintrc-auto-import.json', // Default `./.eslintrc-auto-import.json`
+        globalsPropValue: true, // Default `true`, (true | false | 'readonly' | 'readable' | 'writable' | 'writeable')
+      },
+    }),
+   
+  )
+}
+
+```
+
+

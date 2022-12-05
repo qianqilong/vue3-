@@ -51,8 +51,8 @@ const cards: Array<ICard> = reactive([
 
 nextTick(() => {
   // 基于准备好的dom，初始化echarts实例
-  echarts.init(document.getElementById('echart1')).setOption(echart1)
-  echarts.init(document.getElementById('echart2')).setOption(echart2)
+  echarts.init(document.getElementById('echart1') as any).setOption(echart1 as any)
+  echarts.init(document.getElementById('echart2') as any).setOption(echart2 as any)
 })
 </script>
 
@@ -84,7 +84,7 @@ nextTick(() => {
     </div>
     <!-- 数据表 -->
     <div class="mt-5 grid md:grid-cols-2 gap-3">
-      <el-card shadow="always" :body-style="{ padding: '20px' }" >
+      <el-card shadow="always" :body-style="{ padding: '20px' }">
         <template #header>
           <div>用户统计</div>
         </template>

@@ -11,6 +11,10 @@ export function logout() {
   store.remove(CacheEnum.TOKEN_NAME)
   router.push('/')
   userStore().info = null
+  ElMessage({
+    message: '退出登录成功',
+    type: 'success',
+  })
 }
 
 interface IloginData {
@@ -28,6 +32,10 @@ export async function onSubmit(values: IloginData) {
     } = await login(values)
     store.set(CacheEnum.TOKEN_NAME, token)
     const routeName = store.get(CacheEnum.REDIRECT_ROUTE_NAME) ?? ('home' as any)
+    ElMessage({
+      message: '登陆成功',
+      type: 'success',
+    })
     router.push({ name: routeName })
   } catch (error) {}
 }

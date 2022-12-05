@@ -8,8 +8,7 @@ export default function autoRegisterComponent(app: App) {
   const components = import.meta.glob('@/components/global/**/*.vue', { eager: true }) as any
   Object.keys(components).forEach((key) => {
     // 取出名字
-    const name = key.match(/(?<name>[a-z\-]+)\.vue/i)?.['groups']?.name as string
-    console.log(name)
-    app.component(_.camelCase(name), components[key].default)
+    // const name = key.match(/(?<name>[a-z\-]+)\.vue/i)?.['groups']?.name as string
+    // app.component(_.camelCase(name), components[key].default)
   })
 }
